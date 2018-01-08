@@ -13,6 +13,6 @@ namespace SiteScraper.Models
     {
         public string SiteName { get; set; }
         public List<RegexPattern> Regexes = new List<RegexPattern>();
-        public ScrapeRequest Request { get; set; }             
+        public ScrapeRequest Request = new ScrapeRequest();           
     }  
 }

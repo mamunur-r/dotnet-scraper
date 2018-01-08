@@ -9,6 +9,6 @@ namespace WebScraper.Lib
         public string Url { get; set; }
         public string RequestType { get; set; }
         public string PostContent { get; set; }
-        public WebConfigSetting WebConfig { get; set; }
+        public WebConfigSetting WebConfig = new WebConfigSetting();
     }
 }

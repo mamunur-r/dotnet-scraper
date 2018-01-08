@@ -39,9 +39,9 @@ namespace WebScraper.Lib
             return result;
         }
 
-        public string GetWebRequestResponse(string url, ScrapeRequest scrapeRequest)
+        public string GetWebRequestResponse(ScrapeRequest scrapeRequest)
         {
-            HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(url);
+            HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(scrapeRequest.Url);
 
             SetRequestCookies(request, scrapeRequest);
 
@@ -105,7 +105,7 @@ namespace WebScraper.Lib
             if (!string.IsNullOrEmpty(sr.WebConfig.Accept))
                 request.Accept = sr.WebConfig.Accept;
 
-            request.UserAgent = (!string.IsNullOrEmpty(sr.WebConfig.UserAgent)) ? sr.WebConfig.UserAgent : _useAgent;
+            request.UserAgent = (!string.IsNullOrEmpty(sr.WebConfig.UserAgent)) ? sr.WebConfig.UserAgent : _userAgent;
         }
     }
 }
