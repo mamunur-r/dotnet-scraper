@@ -8,9 +8,10 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>SiteScraper</RootNamespace>
     <AssemblyName>SiteScraper</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -54,9 +55,9 @@
     <Folder Include="Resources\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\WebScraper.Lib\WebScraper.Lib.csproj">
-      <Project>{fc0618db-81cc-4f09-8436-f9fcd9337a2b}</Project>
-      <Name>WebScraper.Lib</Name>
+    <ProjectReference Include="..\WebScraper\WebScraper.csproj">
+      <Project>{a7c7c384-834c-40cb-bd3e-52738bc7ad72}</Project>
+      <Name>WebScraper</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

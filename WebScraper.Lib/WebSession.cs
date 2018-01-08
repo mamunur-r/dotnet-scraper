@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace WebScraper.Lib
@@ -13,6 +14,11 @@ namespace WebScraper.Lib
         private CookieContainer _cookies = new CookieContainer();
         private string _userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36";
 
+        public WebSession()
+        {
+            //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3;                        
+            ServicePointManager.Expect100Continue = true;
+        }
 
         public string GetWebClientResponse(string url, Dictionary<string,string> parameters)
         {
@@ -27,7 +33,7 @@ namespace WebScraper.Lib
 
                 using (WebClient client = new WebClient())
                 {
-                    byte[] response = client.UploadValues(url, postContent);
+                    byte[] response = client.UploadValues(url,"POST", postContent);
 
                     result = Encoding.UTF8.GetString(response);
                 }
@@ -82,6 +88,12 @@ namespace WebScraper.Lib
                         request.Headers[h.Key] = h.Value;
                 }
             }
+            else
+            {
+                request.Headers.Add("Accept-Language", "en-US, en;q=0.8");
+                request.Headers.Add("Cache-Control", "no-chche");
+                request.Headers.Add("Accept-Encoding", "gzip, deflate");
+            }
 
         }
 
@@ -106,6 +118,18 @@ namespace WebScraper.Lib
                 request.Accept = sr.WebConfig.Accept;
 
             request.UserAgent = (!string.IsNullOrEmpty(sr.WebConfig.UserAgent)) ? sr.WebConfig.UserAgent : _userAgent;
+        }
+    }
+
+    internal class AcceptAllCertificatePolicy 
+    {
+        public AcceptAllCertificatePolicy()
+        {
+        }
+
+        public bool CheckValidationResult(ServicePoint sPoint, X509Certificate cert, WebRequest wRequest, int certProb)
+        {
+            return true;
         }
     }
 }
