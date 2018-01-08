@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
+using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Web;
 
-namespace WebScraper.Lib
+namespace WebScraper
 {
     public class WebSession
     {
@@ -16,26 +18,37 @@ namespace WebScraper.Lib
 
         public WebSession()
         {
-            //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3;                        
-            ServicePointManager.Expect100Continue = true;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | SecurityProtocolType.Ssl3;
+            //ServicePointManager.Expect100Continue = false;
         }
 
-        public string GetWebClientResponse(string url, Dictionary<string,string> parameters)
+        public string GetWebClientResponse(ScrapeRequest sr)
         {
             string result = string.Empty;
-            NameValueCollection postContent = new NameValueCollection();
+            NameValueCollection postContent = new NameValueCollection();            
 
             try
             {
-                if (parameters != null && parameters.Count > 0)
-                    foreach (var param in parameters)
-                        postContent.Add(param.Key, param.Value);
+                if (sr.WebConfig.PostParams != null && sr.WebConfig.PostParams.Count > 0)
+                    foreach (var param in sr.WebConfig.PostParams)
+                        postContent.Add(param.Key, HttpUtility.UrlEncode(param.Value));
 
                 using (WebClient client = new WebClient())
                 {
-                    byte[] response = client.UploadValues(url,"POST", postContent);
+                    if (sr.WebConfig.Headers != null)
+                        foreach (var h in sr.WebConfig.Headers)
+                            client.Headers.Add(h.Key, h.Value);
 
-                    result = Encoding.UTF8.GetString(response);
+                    if (!string.IsNullOrEmpty(sr.WebConfig.CustomCookies))
+                        client.Headers.Add(HttpRequestHeader.Cookie, sr.WebConfig.CustomCookies);
+
+                    if (sr.RequestType == "POST")
+                    {
+                        byte[] response = client.UploadValues(sr.Url, sr.RequestType, postContent);
+                        result = Encoding.UTF8.GetString(response);
+                    }
+                    else
+                        result = client.DownloadString(sr.Url);
                 }
             }
             catch (Exception)
@@ -54,10 +67,11 @@ namespace WebScraper.Lib
             SetRequestHeaders(request, scrapeRequest);
 
             SetRequestMeta(request, scrapeRequest);
-            
+
             if (scrapeRequest.RequestType.ToUpper() == "POST")
             {
-                request.ContentType = "application/x-www.form-urlencoded";
+                //scrapeRequest.PostContent = HttpUtility.UrlEncode(scrapeRequest.PostContent);
+                request.ContentType = "application/x-www-form-urlencoded";
                 byte[] contentData = Encoding.ASCII.GetBytes(scrapeRequest.PostContent);
                 request.ContentLength = contentData.Length;
                 Stream contentWriter = request.GetRequestStream();
@@ -67,19 +81,46 @@ namespace WebScraper.Lib
             else
                 request.ContentType = "text/html, charset=utf-8"; //application/json; charset=utf-8 
 
-            WebResponse response = request.GetResponse();
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             if (response == null) return null;
 
-            StreamReader sr = new StreamReader(response.GetResponseStream());
-            return sr.ReadToEnd();            
-        }   
-        
+            return readResponseStream(response);
+        }
+
+        private string readResponseStream(HttpWebResponse response)
+        {
+            Stream responseStream = null;
+            StreamReader reader = null;
+            try
+            {
+                responseStream = response.GetResponseStream();
+                if (responseStream != null)
+                {
+                    responseStream.ReadTimeout = 15000;
+
+                    if (response.ContentEncoding.ToLower().Contains("gzip"))
+                        responseStream = new GZipStream(responseStream, CompressionMode.Decompress);
+                    else if (response.ContentEncoding.ToLower().Contains("deflate"))
+                        responseStream = new DeflateStream(responseStream, CompressionMode.Decompress);
+                    reader = new StreamReader(responseStream);
+                }
+
+                if (reader != null) return reader.ReadToEnd();
+            }
+            finally
+            {
+                if (reader != null) reader.Close();
+                if (responseStream != null) responseStream.Close();
+            }
+            return null;
+        }
+
         void SetRequestHeaders(HttpWebRequest request, ScrapeRequest sr)
         {
-            if(sr.WebConfig.Headers != null && sr.WebConfig.Headers.Count > 0)
+            if (sr.WebConfig.Headers != null && sr.WebConfig.Headers.Count > 0)
             {
                 WebHeaderCollection whc = request.Headers;
-                foreach(var h in sr.WebConfig.Headers)
+                foreach (var h in sr.WebConfig.Headers)
                 {
                     if (WebHeaderCollection.IsRestricted(h.Key)) continue;
                     else if (!request.Headers.AllKeys.Equals(h.Key))
@@ -107,29 +148,17 @@ namespace WebScraper.Lib
                 request.CookieContainer.Add(sr.WebConfig.Cookies);
                 _cookies = request.CookieContainer;
             }
-                
+
         }
 
         void SetRequestMeta(HttpWebRequest request, ScrapeRequest sr)
         {
-            request.Timeout = (sr.WebConfig.TimeOut != 0) ? sr.WebConfig.TimeOut : 90000;            
+            request.Timeout = (sr.WebConfig.TimeOut != 0) ? sr.WebConfig.TimeOut : 90000;
             request.Method = sr.RequestType;
             if (!string.IsNullOrEmpty(sr.WebConfig.Accept))
                 request.Accept = sr.WebConfig.Accept;
 
             request.UserAgent = (!string.IsNullOrEmpty(sr.WebConfig.UserAgent)) ? sr.WebConfig.UserAgent : _userAgent;
-        }
-    }
-
-    internal class AcceptAllCertificatePolicy 
-    {
-        public AcceptAllCertificatePolicy()
-        {
-        }
-
-        public bool CheckValidationResult(ServicePoint sPoint, X509Certificate cert, WebRequest wRequest, int certProb)
-        {
-            return true;
         }
     }
 }

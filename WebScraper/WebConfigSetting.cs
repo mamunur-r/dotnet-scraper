@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 
-namespace WebScraper.Lib
+namespace WebScraper
 {
     public class WebConfigSetting
     {
@@ -17,6 +17,8 @@ namespace WebScraper.Lib
         /// </summary>
         public int TimeOut = 90000;
         public Dictionary<string, string> Headers;
+        public Dictionary<string, string> PostParams = new Dictionary<string, string>();
         public CookieCollection Cookies;
+        public string CustomCookies { get; set; }
     }
 }
