@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RegexPattern.cs" />
     <Compile Include="ScrapeRequest.cs" />
     <Compile Include="WebConfigSetting.cs" />
     <Compile Include="WebSession.cs" />

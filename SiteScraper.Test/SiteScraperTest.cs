@@ -1,9 +1,7 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SiteScraper.Models;
 using WebScraper;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 
 namespace SiteScraper.Test
 {
