@@ -69,9 +69,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\json.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="Resources\SampleHtml.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
