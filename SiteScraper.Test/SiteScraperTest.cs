@@ -2,6 +2,8 @@
 using SiteScraper.Models;
 using WebScraper;
 using System.Collections.Generic;
+using System.IO;
+using Newtonsoft.Json;
 
 namespace SiteScraper.Test
 {
@@ -109,7 +111,7 @@ namespace SiteScraper.Test
         public void RegexMatchingTest()
         {
             RegexPattern rp = new RegexPattern();
-            string html = " ab 123456 bc 34567 <pick me up> again <pick me as well>";
+            string html = File.ReadAllText("Resources\\SampleHtml.txt");
             WorkItem wi = new WorkItem();
             wi.Regexes = new List<RegexPattern>()
             {
@@ -118,44 +120,52 @@ namespace SiteScraper.Test
                     Id = 1,
                     ParentId = 0,
                     Type = RegexType.List,
-                    RegularExpression =rp.GetRegex(@"<(?<List>Pick\s*me\s*up)")
+                    RegularExpression =rp.GetRegex(@"class=""(?<ListPage>cabins-prices\s*custom-width-center)""")
                 },
-                //new RegexPattern{
-                //    Name = "HtmlSelection",
-                //    Id = 2,
-                //    ParentId = 1,
-                //    Type = RegexType.Selection,
-                //    RegularExpression =rp.GetRegex(@"")
-                //},
+                new RegexPattern{
+                    Name = "HtmlSelection",
+                    Id = 2,
+                    ParentId = 1,
+                    Type = RegexType.Selection,
+                    RegularExpression =rp.GetRegex(@"(?<Selections><section\s*class=""cabins-prices\s*custom-width-center"".*?</section>)")
+                },
+                new RegexPattern{
+                    Name = "Title",
+                    Id = 13,
+                    ParentId = 1,
+                    Type = RegexType.Global,
+                    RegularExpression =rp.GetRegex(@"<h3\s*class=""title""[^>]*>(?<Title>[^<]*)")
+                },
                 new RegexPattern{
                     Name = "Item",
                     Id = 3,
                     ParentId = 1,
                     Type =RegexType.Item,
-                    RegularExpression =rp.GetRegex(@"<(?<item>[^>]*)")
+                    RegularExpression =rp.GetRegex(@"(?<Item>class=""price-item"".*?<\!--\s*Price\s*item\s*start\s*-->)")
                 },
                 new RegexPattern{
                     Name = "Name",
                     Id = 4,
                     ParentId = 3,
                     Type =RegexType.Detail,
-                    RegularExpression =rp.GetRegex(@"(?<First>pick\s*me)")
+                    RegularExpression =rp.GetRegex(@"class=""title""[^>]*>(?<Cabin>[^<]*)")
                 },
                 new RegexPattern{
                     Name = "Date",
                     Id = 5,
                     ParentId = 3,
                     Type =RegexType.Detail,
-                    RegularExpression =rp.GetRegex(@"(?<Second>as\s*well)")
+                    RegularExpression =rp.GetRegex(@"class=""price\s*havent-old-price\s*""[^>]*>(?<Currency>[^\d]*)")
                 },
                 new RegexPattern{
                     Name = "Price",
                     Id = 6,
                     ParentId = 3,
                     Type =RegexType.Detail,
-                    RegularExpression =rp.GetRegex(@"(?<Not>found)")
+                    RegularExpression =rp.GetRegex(@"class=""price\s*havent-old-price\s*""[^>]*>\€(?<Price>[^<]*)")
                 }
             };
+
             var response = rp.ProcessHtml(html, wi.Regexes);
             Assert.IsTrue(response != null);
         }

@@ -19,33 +19,37 @@ namespace WebScraper
             //ServicePointManager.Expect100Continue = false;
         }
 
-        public string GetWebClientResponse(ScrapeRequest sr)
+        public string GetWebClientResponse(ScrapeRequest Request)
         {
             string result = string.Empty;
             NameValueCollection postContent = new NameValueCollection();            
 
             try
             {
-                if (sr.WebConfig.PostParams != null && sr.WebConfig.PostParams.Count > 0)
-                    foreach (var param in sr.WebConfig.PostParams)
+                if (Request.WebConfig.PostParams != null && Request.WebConfig.PostParams.Count > 0)
+                    foreach (var param in Request.WebConfig.PostParams)
                         postContent.Add(param.Key, HttpUtility.UrlEncode(param.Value));
 
                 using (WebClient client = new WebClient())
                 {
-                    if (sr.WebConfig.Headers != null)
-                        foreach (var h in sr.WebConfig.Headers)
+                    if (Request.WebConfig.Headers != null)
+                        foreach (var h in Request.WebConfig.Headers)
                             client.Headers.Add(h.Key, h.Value);
 
-                    if (!string.IsNullOrEmpty(sr.WebConfig.CustomCookies))
-                        client.Headers.Add(HttpRequestHeader.Cookie, sr.WebConfig.CustomCookies);
+                    if (!string.IsNullOrEmpty(Request.WebConfig.CustomCookies))
+                        client.Headers.Add(HttpRequestHeader.Cookie, Request.WebConfig.CustomCookies);
 
-                    if (sr.RequestType == "POST")
+                    if (Request.RequestType == "POST")
                     {
-                        byte[] response = client.UploadValues(sr.Url, sr.RequestType, postContent);
+                        byte[] response = client.UploadValues(Request.Url, Request.RequestType, postContent);
                         result = Encoding.UTF8.GetString(response);
                     }
                     else
-                        result = client.DownloadString(sr.Url);
+                    {
+                        result = client.DownloadString(Request.Url);                        
+                        result = Encoding.UTF8.GetString(Encoding.Default.GetBytes(result));
+                    }
+
                 }
             }
             catch (Exception)
